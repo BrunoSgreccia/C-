@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Windows.Forms;
 using Banco.Contas;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Banco
 {
     public partial class Form1 : Form
     {
-        
-        
-        private int numeroDeContas;
-        public Conta[] contas;
-        
+        private List<Conta> contas;
+        private string nome = Path.Combine(Environment.CurrentDirectory, "contas.txt");
+
+
 
         public Form1()
         {
@@ -19,7 +20,17 @@ namespace Banco
 
         public void Form1_Load(object sender, EventArgs e)
         {
-
+            contas = new List<Conta>();
+            using (var f = File.Open(nome, FileMode.OpenOrCreate))
+            using (var Leitor = new StreamReader(f))
+            {
+                string linha = Leitor.ReadLine();
+                while (linha != null)
+                {
+                    this.AdicionaConta(linha.ParaConta());
+                    linha = Leitor.ReadLine();
+                }
+            }
 
             /* c = new Conta();
              c.numero = 1;
@@ -29,7 +40,7 @@ namespace Banco
              textTitular.Text = c.Titutar.Nome;
              textNumero.Text = Convert.ToString(c.numero);
              textSaldo.Text = Convert.ToString(c.saldo);
-            
+
             c1 = new ContaPoupanca();
              c1.numero = 2;
              Cliente clientep = new Cliente("Saulo");
@@ -39,25 +50,8 @@ namespace Banco
              textNumero.Text = Convert.ToString(c1.numero);
              textSaldo.Text = Convert.ToString(c1.saldo);
              */
-            contas = new Conta[1000];
-       
-            Conta c1 = new Conta();
-            c1.Titutar = new Cliente("Lucas");
-            c1.numero = 1;
-            this.AdicionaConta(c1);
 
-            Conta c2 = new Conta();
-            c2.Titutar = new Cliente("Roberto");
-            c2.numero = 1;
-            this.AdicionaConta(c2);
 
-            Conta c3 = new Conta();
-            c3.Titutar = new Cliente("Pablo");
-            c3.numero = 1;
-            this.AdicionaConta(c3);
-
-            
-            
 
         }
 
@@ -70,12 +64,12 @@ namespace Banco
             selecionada.Deposita(valorOperacao);
             textSaldo.Text = Convert.ToString(selecionada.saldo);
 
-           /* string valorDigitado = textValor.Text;
-            double valorOperacao = Convert.ToDouble(valorDigitado);
-            c1.Deposita(valorOperacao);
-            textSaldo.Text = Convert.ToString(this.c1.saldo);
-            */
-           MessageBox.Show("Deposito feito com sucesso");
+            /* string valorDigitado = textValor.Text;
+             double valorOperacao = Convert.ToDouble(valorDigitado);
+             c1.Deposita(valorOperacao);
+             textSaldo.Text = Convert.ToString(this.c1.saldo);
+             */
+            MessageBox.Show("Deposito feito com sucesso");
         }
 
         private void btnSaca_Click(object sender, EventArgs e)
@@ -114,7 +108,7 @@ namespace Banco
 
         private void comboDestinoTransferencia_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         private void label5_Click(object sender, EventArgs e)
@@ -156,10 +150,22 @@ namespace Banco
 
         public void AdicionaConta(Conta conta)
         {
-            this.contas[this.numeroDeContas] = conta;
-            this.numeroDeContas++;
+            this.contas.Add(conta);
             ComboContas.Items.Add("Titular: " + conta.Titutar.Nome);
             comboDestinoTransferencia.Items.Add("Titular: " + conta.Titutar.Nome);
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            using (var f = File.OpenWrite(nome))
+            using (var escritor = new StreamWriter(f))
+           
+            {
+                foreach(var c in contas)
+                {
+                    escritor.WriteLine(c.ParaString());
                 }
+            }
+        }
     }
 }
